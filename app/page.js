@@ -1,95 +1,71 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+import { useState, useRef } from 'react';
+import { AppShell } from '@mantine/core';
+import LeftMenu from '../components/LeftMenu';
+import Canvas from '../components/Canvas';
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>app/page.js</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [media, setMedia] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackMode, setPlaybackMode] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const intervalRef = useRef(null);
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+  const handlePlay = () => {
+    if (!media) return;
+    setPlaybackMode(true);
+    setIsPlaying(true);
+    setCurrentTime(media.startTime);
+    intervalRef.current = setInterval(() => {
+      setCurrentTime((prev) => {
+        if (prev < media.endTime) return prev + 1;
+        clearInterval(intervalRef.current);
+        setIsPlaying(false);
+        return prev;
+      });
+    }, 1000);
+  };
+
+  const updateMediaProps = (props) => {
+    setMedia((prev) => ({ ...prev, ...props }));
+  };
+
+  return (
+    <AppShell style={{ height: '100vh' }} header={{ height: 60 }}>
+      <AppShell.Header
+        style={{
+          backgroundColor: '#216DFF',
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '0 16px',
+        }}
+      >
+        <h2 style={{ margin: 0 }}>Veed Replica</h2>
+      </AppShell.Header>
+
+      {/* Custom flex container for splitting the layout */}
+      <div style={{ display: 'flex', height: 'calc(100vh - 60px)', overflow: 'hidden' }}>
+        {/* Left Sidebar */}
+        <div style={{ width: 300, flexShrink: 0, backgroundColor: '#eeeeee' }}>
+          <LeftMenu
+            media={media}
+            updateMediaProps={updateMediaProps}
+            handlePlay={handlePlay}
+          />
         </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+
+        {/* Main Canvas Area */}
+        <div style={{ flex: 1, backgroundColor: '#f8f9fa' }}>
+          <Canvas
+            media={media}
+            setMedia={setMedia}
+            isPlaying={isPlaying}
+            currentTime={currentTime}
+            playbackMode={playbackMode}
           />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        </div>
+      </div>
+    </AppShell>
   );
 }
